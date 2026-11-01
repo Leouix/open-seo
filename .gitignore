@@ -14,3 +14,4 @@ next-env.d.ts
 # Reports, crawls, leads and settings written by the app.
 data/*
 !data/.gitkeep
+!data/settings.json

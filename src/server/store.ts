@@ -134,7 +134,7 @@ const crawlsIndex = 'crawls.json'
 const monitorsFile = 'monitors.json'
 const settingsFile = 'settings.json'
 
-export async function saveReport(report: AuditReport): Promise<void> {
+export async function saveReport(report: AuditReport, requester?: string): Promise<void> {
 	await writeJson(`reports/${report.id}.json`, report)
 	const summary: ReportSummary = {
 		id: report.id,
@@ -145,7 +145,8 @@ export async function saveReport(report: AuditReport): Promise<void> {
 		createdAt: report.createdAt,
 		score: report.score,
 		grade: report.grade,
-		source: report.source
+		source: report.source,
+		...(requester ? { requester } : {})
 	}
 	await updateJson<ReportSummary[]>(reportsIndex, [], (list) => [summary, ...list])
 }

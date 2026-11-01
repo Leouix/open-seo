@@ -1,9 +1,17 @@
+import { createHash } from 'node:crypto'
 import { AuditError, runAudit } from '@server/audit'
 import { clientIp, takeRateLimit, withSlot } from '@server/limits'
 import { pagespeedConfig } from '@server/settings'
 import { getSettings, saveReport } from '@server/store'
 import { jsonError, streamEvents } from '@server/stream'
 import type { AuditProgress, ReportSource } from '@shared/types'
+
+function hashRequester(ip: string, visitor?: string): string {
+	return createHash('sha256')
+		.update(visitor ? `${ip}:${visitor}` : ip)
+		.digest('hex')
+		.slice(0, 16)
+}
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -19,15 +27,19 @@ const SOURCES: ReportSource[] = ['web', 'api']
 export async function POST(request: Request): Promise<Response> {
 	const body = (await request.json().catch(() => ({}))) as Record<string, unknown>
 	const url = typeof body.url === 'string' ? body.url : ''
+	const visitor = typeof body.visitor === 'string' ? body.visitor : undefined
 	const source = SOURCES.includes(body.source as ReportSource)
 		? (body.source as ReportSource)
 		: 'api'
 	const settings = await getSettings()
 
 	if (!url.trim()) return jsonError('Enter a website address to audit.', 400)
-	if (!takeRateLimit(clientIp(request))) {
+	const ip = clientIp(request)
+	if (!takeRateLimit(ip)) {
 		return jsonError("You've run a lot of audits. Try again in an hour.", 429)
 	}
+
+	const requester = hashRequester(ip, visitor)
 
 	const audit = (onProgress?: (progress: AuditProgress) => void) =>
 		withSlot(async () => {
@@ -37,7 +49,7 @@ export async function POST(request: Request): Promise<Response> {
 				pagespeed: pagespeedConfig(settings),
 				brokenLinkLimit: settings.brokenLinkLimit
 			})
-			await saveReport(report)
+			await saveReport(report, requester)
 
 			return report
 		})

@@ -122,6 +122,8 @@ export interface ReportSummary {
 	score: number
 	grade: string
 	source: ReportSource
+	/** Anonymous fingerprint of who requested the audit (hashed IP + optional visitor id). */
+	requester?: string
 }
 
 export interface AuditProgress {

@@ -1,6 +1,7 @@
 node_modules
 .next
-data
+data/*
+!data/settings.json
 .git
 .github
 docs

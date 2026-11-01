@@ -20,6 +20,7 @@ COPY --from=build /app/.next/static ./.next/static
 # For MCP clients that only speak stdio: docker exec -i openseo node mcp-stdio.mjs
 COPY --from=build /app/scripts/mcp-stdio.mjs ./mcp-stdio.mjs
 RUN mkdir -p /data && chown node:node /data
+COPY --chown=node:node data/settings.json /data/settings.json
 USER node
 VOLUME /data
 EXPOSE 3000

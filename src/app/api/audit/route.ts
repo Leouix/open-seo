@@ -1,17 +1,10 @@
-import { createHash } from 'node:crypto'
 import { AuditError, runAudit } from '@server/audit'
 import { clientIp, takeRateLimit, withSlot } from '@server/limits'
+import { hashRequester } from '@server/requester'
 import { pagespeedConfig } from '@server/settings'
 import { getSettings, saveReport } from '@server/store'
 import { jsonError, streamEvents } from '@server/stream'
 import type { AuditProgress, ReportSource } from '@shared/types'
-
-function hashRequester(ip: string, visitor?: string): string {
-	return createHash('sha256')
-		.update(visitor ? `${ip}:${visitor}` : ip)
-		.digest('hex')
-		.slice(0, 16)
-}
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -39,7 +32,7 @@ export async function POST(request: Request): Promise<Response> {
 		return jsonError("You've run a lot of audits. Try again in an hour.", 429)
 	}
 
-	const requester = hashRequester(ip, visitor)
+	const requester = hashRequester(visitor, ip)
 
 	const audit = (onProgress?: (progress: AuditProgress) => void) =>
 		withSlot(async () => {

@@ -1,3 +1,4 @@
+import { isAdminRequest } from '@server/admin'
 import { AuditError, runAudit } from '@server/audit'
 import { clientIp, takeRateLimit, withSlot } from '@server/limits'
 import { hashRequester } from '@server/requester'
@@ -28,7 +29,9 @@ export async function POST(request: Request): Promise<Response> {
 
 	if (!url.trim()) return jsonError('Enter a website address to audit.', 400)
 	const ip = clientIp(request)
-	if (!takeRateLimit(ip)) {
+	// The site owner, signed in as an admin, audits as often as they need: no hourly limit.
+	const admin = await isAdminRequest(request)
+	if (!admin && !takeRateLimit(ip)) {
 		return jsonError("You've run a lot of audits. Try again in an hour.", 429)
 	}
 

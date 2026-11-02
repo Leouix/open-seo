@@ -137,19 +137,20 @@ use Docker if you rely on them.
 Everything below is optional. With `docker run`, pass them with `-e`; with Compose, put them in a
 `.env` file next to `docker-compose.yml`; without Docker, copy `.env.example` to `.env.local`.
 
-| Variable                 | Does                                                                                               |
-| ------------------------ | -------------------------------------------------------------------------------------------------- |
-| `PAGESPEED_API_KEY`      | A free Google PageSpeed key for Core Web Vitals and screenshots. You can also add it in Settings   |
-| `ADMIN_PASSWORD`         | Asks for a password (user `admin`) on history, the crawler and settings                            |
-| `OPENSEO_DATA_DIR`       | Where data is stored. Defaults to `./data`                                                         |
-| `UPSTASH_REDIS_REST_URL` | With `UPSTASH_REDIS_REST_TOKEN`, keeps data in Upstash Redis instead (see On Vercel)               |
-| `OPENSEO_RATE_LIMIT`     | Audits per visitor per hour, and the same number of share previews. Defaults to 60; 0 turns it off |
-| `OPENSEO_MAX_CONCURRENT` | Audits and crawls running at once. Defaults to 4                                                   |
-| `OPENSEO_ALLOW_PRIVATE`  | Set to `true` to audit localhost and private networks                                              |
-| `OPENSEO_USER_AGENT`     | The User-Agent sent to audited sites                                                               |
-| `SMTP_URL`               | The mail server for alert emails, like `smtps://user:password@smtp.example.com:465`                |
-| `SMTP_FROM`              | Who alert emails come from, like `OpenSEO <seo@example.com>`                                       |
-| `OPENSEO_SCHEDULER`      | Set to `false` to stop this copy of OpenSEO running monitors                                       |
+| Variable                  | Does                                                                                                                                |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `PAGESPEED_API_KEY`       | A free Google PageSpeed key for Core Web Vitals and screenshots. You can also add it in Settings                                    |
+| `ADMIN_PASSWORD`          | Asks for a password (user `admin`) on history, the crawler and settings                                                             |
+| `OPENSEO_DATA_DIR`        | Where data is stored. Defaults to `./data`                                                                                          |
+| `UPSTASH_REDIS_REST_URL`  | With `UPSTASH_REDIS_REST_TOKEN`, keeps data in Upstash Redis instead (see On Vercel)                                                |
+| `OPENSEO_RATE_LIMIT`      | Audits per visitor per hour, and the same number of share previews. Defaults to 60; 0 turns it off                                  |
+| `OPENSEO_ADMIN_CHECK_URL` | Where to ask whether a visitor is a signed-in admin; admins skip the audit limit. Defaults to `http://backend:8000/api/admin/check` |
+| `OPENSEO_MAX_CONCURRENT`  | Audits and crawls running at once. Defaults to 4                                                                                    |
+| `OPENSEO_ALLOW_PRIVATE`   | Set to `true` to audit localhost and private networks                                                                               |
+| `OPENSEO_USER_AGENT`      | The User-Agent sent to audited sites                                                                                                |
+| `SMTP_URL`                | The mail server for alert emails, like `smtps://user:password@smtp.example.com:465`                                                 |
+| `SMTP_FROM`               | Who alert emails come from, like `OpenSEO <seo@example.com>`                                                                        |
+| `OPENSEO_SCHEDULER`       | Set to `false` to stop this copy of OpenSEO running monitors                                                                        |
 
 You only need `ADMIN_PASSWORD` if other people can reach your OpenSEO, like on a shared network.
 Shared reports and comparisons, the home page and Share preview stay open; everything else asks

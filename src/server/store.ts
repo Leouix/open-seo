@@ -161,17 +161,39 @@ export function listReports(): Promise<ReportSummary[]> {
 	return readJson<ReportSummary[]>(reportsIndex, [])
 }
 
-export async function deleteReport(id: string): Promise<boolean> {
-	if (!isValidId(id)) return false
-	await removeJson(`reports/${id}.json`)
+export interface DeleteResult {
+	deleted: boolean
+	/** Set when the report exists but wasn't deleted: 'forbidden' for someone else's report. */
+	reason?: 'not-found' | 'forbidden'
+}
+
+/**
+ * Deletes a report file and its index entry. With `expectedRequester`, the entry's requester
+ * is checked under the index lock, so someone else's report can't be deleted mid-update.
+ */
+export async function deleteReport(
+	id: string,
+	expectedRequester?: string
+): Promise<DeleteResult> {
+	if (!isValidId(id)) return { deleted: false, reason: 'not-found' }
 	let found = false
+	let forbidden = false
 	await updateJson<ReportSummary[]>(reportsIndex, [], (list) => {
-		found = list.some((r) => r.id === id)
+		const entry = list.find((r) => r.id === id)
+		if (!entry) return list
+		if (expectedRequester && entry.requester !== expectedRequester) {
+			forbidden = true
+
+			return list
+		}
+		found = true
 
 		return list.filter((r) => r.id !== id)
 	})
+	if (!found) return { deleted: false, reason: forbidden ? 'forbidden' : 'not-found' }
+	await removeJson(`reports/${id}.json`)
 
-	return found
+	return { deleted: true }
 }
 
 export async function saveCrawl(crawl: CrawlReport): Promise<void> {

@@ -1,4 +1,6 @@
 import { deleteReport, getReport } from '@server/store'
+import { clientIp } from '@server/limits'
+import { hashRequester } from '@server/requester'
 import { jsonError } from '@server/stream'
 
 export const dynamic = 'force-dynamic'
@@ -18,11 +20,16 @@ export async function GET(
 }
 
 export async function DELETE(
-	_request: Request,
+	request: Request,
 	context: RouteContext<'/api/reports/[id]'>
 ): Promise<Response> {
 	const { id } = await context.params
-	const deleted = await deleteReport(id)
+	const visitor = new URL(request.url).searchParams.get('visitor') ?? undefined
+	const requester = hashRequester(visitor, clientIp(request))
+	const { deleted, reason } = await deleteReport(id, requester)
 
-	return deleted ? new Response(null, { status: 204 }) : jsonError('Report not found.', 404)
+	if (deleted) return new Response(null, { status: 204 })
+	if (reason === 'forbidden') return jsonError('You can only delete your own reports.', 403)
+
+	return jsonError('Report not found.', 404)
 }

@@ -119,10 +119,35 @@ describe('the store on Redis', () => {
 	it('deletes a report and its index entry', async () => {
 		await saveReport(report('report-one'))
 
-		expect(await deleteReport('report-one')).toBe(true)
+		expect(await deleteReport('report-one')).toEqual({ deleted: true })
 		expect(keys.has('openseo:reports/report-one.json')).toBe(false)
 		expect(await getReport('report-one')).toBeNull()
 		expect(await listReports()).toEqual([])
+	})
+
+	it('deletes a report only for its owner', async () => {
+		await saveReport(report('report-own'), 'hash-owner')
+
+		expect(await deleteReport('report-own', 'hash-owner')).toEqual({ deleted: true })
+		expect(await getReport('report-own')).toBeNull()
+	})
+
+	it("doesn't delete someone else's report", async () => {
+		await saveReport(report('report-foreign'), 'hash-owner')
+
+		expect(await deleteReport('report-foreign', 'hash-stranger')).toEqual({
+			deleted: false,
+			reason: 'forbidden'
+		})
+		expect(keys.has('openseo:reports/report-foreign.json')).toBe(true)
+		expect((await listReports()).map((r) => r.id)).toEqual(['report-foreign'])
+	})
+
+	it('reports not-found for an unknown report', async () => {
+		expect(await deleteReport('report-missing', 'hash-owner')).toEqual({
+			deleted: false,
+			reason: 'not-found'
+		})
 	})
 
 	it("doesn't write over the history when Redis can't be read", async () => {
